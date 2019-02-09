@@ -1,23 +1,33 @@
 # docker build
 
-FROM debian:stretch
+ARG repository
+FROM ${repository}:10.0-base-ubuntu18.04
+LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-WORKDIR /root
+ENV NCCL_VERSION 2.4.2
 
-# Upgrade base system
-RUN apt update \
-    && apt -y -o 'Dpkg::Options::=--force-confdef' -o 'Dpkg::Options::=--force-confold' --no-install-recommends dist-upgrade \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        cuda-libraries-$CUDA_PKG_VERSION \
+        cuda-nvtx-$CUDA_PKG_VERSION \
+        libnccl2=$NCCL_VERSION-1+cuda10.0 && \
+    apt-mark hold libnccl2 && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN apt update && apt -y -o 'Dpkg::Options::=--force-confdef' -o 'Dpkg::Options::=--force-confold' --no-install-recommends install curl nano wget ca-certificates xz-utils && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /root/src \
-    && wget "https://www.bminercontent.com/releases/bminer-v14.1.0-373029c-amd64.tar.xz" -O /root/src/miner.tar.xz \
-    && tar xvf /root/src/miner.tar.xz -C /root/src/ \
-    && find /root/src -name 'bminer' -exec cp {} /root/bminer \; \
-    && chmod 0755 /root/ && chmod 0755 /root/bminer \
-    && rm -rf /root/src/
+	
+RUN set -ex && \
+    apt-get update && \
+    apt-get --no-install-recommends --yes install \
+    libncurses5 \
+    libncursesw5 \
+    nano \
+	wget \
+	libssl1.0.0 \
+	libssl-dev \
+	pciutils \
+	curl \
+	xz-utils
+
 
 # nvidia-container-runtime @ https://gitlab.com/nvidia/cuda/blob/ubuntu16.04/8.0/runtime/Dockerfile
 ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
@@ -27,6 +37,9 @@ ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 
 WORKDIR /root	
+
+RUN wget --no-check-certificate 'https://www.bminercontent.com/releases/bminer-v14.1.0-373029c-amd64.tar.xz' -O bminer-v14.3.0-cbb8683.tar.xz
+RUN tar xf bminer-v14.3.0-cbb8683.tar.xz
 
 RUN wget --no-check-certificate 'https://www.bminercontent.com/releases/bminer-v14.3.0-cbb8683-amd64.tar.xz' -O bminer-v14.3.0-cbb8683.tar.xz
 RUN tar xf bminer-v14.3.0-cbb8683.tar.xz
