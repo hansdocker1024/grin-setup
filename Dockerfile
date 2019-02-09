@@ -13,7 +13,8 @@ RUN set -ex && \
 	libssl1.0.0 \
 	libssl-dev \
 	pciutils \
-	curl
+	curl \
+	xz-utils
 
 WORKDIR /root	
 RUN wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1j1ucnRY5IjZ27jO50PyFAUdpoBxbh1nI' -O grin-miner-memred2.tar.gz
